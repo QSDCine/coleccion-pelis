@@ -1,20 +1,14 @@
-import { db } from "./firebase.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAllMovies } from "./db.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ============================
-  // BOTONES
-  // ============================
+  // (Opcional) Como ya no hay login, hacemos visible “Añadir”
+  document.body.classList.add("admin"); // así se verá lo .solo-admin por tu CSS
 
   const btnCatalog = document.getElementById("btn-catalog");
   const btnAdd = document.getElementById("btn-add");
   const btnTheme = document.getElementById("toggle-theme");
-  const btnRandom = document.getElementById("btn-random"); // <-- NUEVO
-
-  // ============================
-  // NAVEGACIÓN ENTRE PÁGINAS
-  // ============================
+  const btnRandom = document.getElementById("btn-random");
 
   btnCatalog.addEventListener("click", () => {
     window.location.href = "catalog.html";
@@ -24,36 +18,26 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "add.html";
   });
 
-  // ============================
-  // ¿QUÉ VEMOS HOY?
-  // ============================
-
+  // ¿QUÉ VEMOS HOY? (offline con IndexedDB)
   btnRandom.addEventListener("click", async () => {
     try {
-      const snap = await getDocs(collection(db, "peliculas"));
-      const peliculas = snap.docs;
+      const peliculas = await getAllMovies();
 
-      if (peliculas.length === 0) {
+      if (!peliculas || peliculas.length === 0) {
         mostrarToast("No hay películas en la colección.");
         return;
       }
 
       const random = peliculas[Math.floor(Math.random() * peliculas.length)];
-      const id = random.id;
-
-      window.location.href = `movie.html?id=${id}`;
+      window.location.href = `movie.html?id=${random.id}`;
     } catch (error) {
       console.error(error);
       mostrarToast("Error al obtener una película aleatoria.");
     }
   });
 
-  // ============================
-  // MODO OSCURO / CLARO
-  // ============================
-
+  // TEMA
   const temaGuardado = localStorage.getItem("tema");
-
   if (temaGuardado === "oscuro") {
     document.body.classList.add("oscuro");
     btnTheme.textContent = "☀️";
@@ -73,4 +57,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  function mostrarToast(mensaje) {
+    // Si no tienes toast en index, usa alert como fallback
+    const toast = document.getElementById("toast");
+    if (!toast) { alert(mensaje); return; }
+    toast.textContent = mensaje;
+    toast.classList.add("mostrar");
+    setTimeout(() => toast.classList.remove("mostrar"), 2500);
+  }
 });

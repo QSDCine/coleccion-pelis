@@ -104,9 +104,14 @@
 
       <!-- PORTADA -->
       <div class="campo">
-        <label for="portada">Portada (si no cambias, deja vacío)</label>
-        <input type="text" id="portada" placeholder="URL de portada (o deja vacío)" autocomplete="off" >
-      </div>
+  <label for="portada">Portada (si no cambias, deja vacío)</label>
+  <input
+    type="file"
+    id="portada"
+    accept="image/*"
+    capture="environment"
+  >
+</div>
 
       <!-- BOTÓN GUARDAR CAMBIOS -->
       <button type="submit" id="btn-guardar-cambios" class="btn-guardar">
@@ -116,9 +121,7 @@
     </form>
   </main>
   <div id="toast" class="toast"></div>
-  
-  <script type="module" src="js/firebase.js"></script>
-<script type="module" src="js/auth-state.js"></script>
+
   <script type="module" src="js/edit.js"></script>
   <script src="js/tema.js"></script>
 </body>
