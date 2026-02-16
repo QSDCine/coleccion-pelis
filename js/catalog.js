@@ -1,5 +1,4 @@
-import { db } from "./firebase.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAllMovies, blobToObjectURL } from "./db.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -51,17 +50,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================================================
 
   async function cargarPeliculas() {
-    try {
-      const querySnapshot = await getDocs(collection(db, "peliculas"));
+  try {
+    peliculas = await getAllMovies();
 
-      peliculas = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+    // Normalizar por si hay datos antiguos
+    peliculas = peliculas.map(p => ({
+      ...p,
+      director: Array.isArray(p.director) ?
+         p.director
+        : (p.director ? String(p.director).split(",").map(x => x.trim()).filter(Boolean) : []),
+      generos: Array.isArray(p.generos) ?
+         p.generos
+        : (p.generos ? String(p.generos).split(",").map(x => x.trim()).filter(Boolean) : []),
+      saga: p.saga || { esParte: false, nombre: "", numero: null, totalsaga: null }
+    }));
 
-      peliculasFiltradas = [...peliculas];
+    peliculasFiltradas = [...peliculas];
 
-      rellenarFiltros();
+    rellenarFiltros();
 
       // ============================================================
       // RESTAURAR ESTADO DESDE LOCALSTORAGE
@@ -323,9 +329,10 @@ if (edicionExacta) {
     const div = document.createElement("div");
     div.className = "pelicula-lista";
     div.addEventListener("click", () => abrirDetalle(p.id));
-
+const fallback = "img/default.jpg";
+const src = blobToObjectURL(p.portadaThumbBlob) || fallback;
     div.innerHTML = `
-      <img src="${p.portada}" alt="${p.titulo}">
+      <img src="${src}" alt="${p.titulo}">
       <div class="info">
         <span class="titulo">${p.titulo}</span>
         <span class="detalle">${p.año} • ${p.formato}</span>
@@ -339,9 +346,10 @@ if (edicionExacta) {
     const div = document.createElement("div");
     div.className = "pelicula-cuadricula";
     div.addEventListener("click", () => abrirDetalle(p.id));
-
+const fallback = "img/default.jpg";
+const src = blobToObjectURL(p.portadaThumbBlob) || fallback;
     div.innerHTML = `
-      <img src="${p.portada}" alt="${p.titulo}">
+     <img src="${src}" alt="${p.titulo}">
       <span class="titulo">${p.titulo}</span>
       <span class="detalle">${p.año}</span>
     `;

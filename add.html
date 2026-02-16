@@ -104,8 +104,14 @@
 
       <!-- PORTADA -->
       <div class="campo">
-        <label for="portada">Portada</label>
-        <input type="text" id="portada" placeholder="URL de portada (o deja vacío)"  autocomplete="off" >
+        <label for="portada">Portada (foto/archivo)</label>
+<input
+  type="file"
+  id="portada"
+  accept="image/*"
+  capture="environment"
+/>
+<small>Opcional. Si no eliges imagen, se usará una portada por defecto.</small>
       </div>
 
       <!-- BOTÓN GUARDAR -->
@@ -117,8 +123,6 @@
   </main>
   <div id="toast" class="toast"></div>
 
-  <script type="module" src="js/firebase.js"></script>
-<script type="module" src="js/auth-state.js"></script>
   <script type="module" src="js/add.js"></script>
   <script src="js/tema.js"></script>
 </body>

@@ -1,135 +1,96 @@
-import { db } from "./firebase.js";
-import { doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getMovie, deleteMovie, blobToObjectURL } from "./db.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
-
-  // ============================================================
-  // MODO OSCURO (persistente)
-  // ============================================================
+  // MODO OSCURO
   const temaGuardado = localStorage.getItem("tema");
-  if (temaGuardado === "oscuro") {
-    document.body.classList.add("oscuro");
-  }
+  if (temaGuardado === "oscuro") document.body.classList.add("oscuro");
 
-  // ============================================================
-  // OBTENER ID DE LA URL
-  // ============================================================
+  // ID
   const params = new URLSearchParams(window.location.search);
   const idPelicula = params.get("id");
-
   if (!idPelicula) {
     alert("No se ha especificado ninguna película.");
     return;
   }
 
-  // ============================================================
-  // CARGAR PELÍCULA REAL DESDE FIRESTORE
-  // ============================================================
-  const ref = doc(db, "peliculas", idPelicula);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
+  // CARGAR
+  const pelicula = await getMovie(idPelicula);
+  if (!pelicula) {
     alert("Película no encontrada.");
     window.location.href = "catalog.html";
     return;
   }
 
-  const pelicula = snap.data();
-
-  // ============================================================
-  // RELLENAR LA PÁGINA
-  // ============================================================
+  // RELLENAR
   document.getElementById("titulo-pelicula").textContent = pelicula.titulo;
 
   const portada = document.getElementById("portada");
-  portada.src = pelicula.portada;
+  const fallback = "img/default.jpg";
+  const portadaUrl = blobToObjectURL(pelicula.portadaBlob) || fallback;
+
+  portada.src = portadaUrl;
   portada.alt = pelicula.titulo;
-// ===========================
-// LIGHTBOX PARA AMPLIAR PORTADA
-// ===========================
 
-const lightbox = document.getElementById("lightbox");
-const lightboxImg = document.getElementById("lightbox-img");
+  // LIGHTBOX
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
 
-portada.addEventListener("click", () => {
-  lightboxImg.src = portada.src;
-  lightbox.classList.add("visible");
-});
+  portada.addEventListener("click", () => {
+    lightboxImg.src = portada.src;
+    lightbox.classList.add("visible");
+  });
 
-lightbox.addEventListener("click", () => {
-  lightbox.classList.remove("visible");
-});
+  lightbox.addEventListener("click", () => {
+    lightbox.classList.remove("visible");
+  });
 
-// ===========================
-// FIN DEL LIGHTBOX Y CONTINUA EL RELLENO DE PÄGINA
-// ===========================
   document.getElementById("año").textContent = pelicula.año;
-  document.getElementById("director").textContent = pelicula.director.join(", ");
-  document.getElementById("generos").textContent = pelicula.generos.join(", ");
+  document.getElementById("director").textContent = (pelicula.director || []).join(", ");
+  document.getElementById("generos").textContent = (pelicula.generos || []).join(", ");
   document.getElementById("formato").textContent = pelicula.formato;
-  document.getElementById("edicionEspecial").textContent =
-    pelicula.edicionEspecial ? "Sí" : "No";
+  document.getElementById("edicionEspecial").textContent = pelicula.edicionEspecial ? "Sí" : "No";
 
   const sagaSpan = document.getElementById("saga");
-  sagaSpan.textContent = pelicula.saga.esParte ?
-     `Película ${pelicula.saga.numero} de ${pelicula.saga.totalsaga} de ${pelicula.saga.nombre}`
+  const saga = pelicula.saga || {};
+  sagaSpan.textContent = saga.esParte ?
+     `Película ${saga.numero} de ${saga.totalsaga} de ${saga.nombre}`
     : "No pertenece a ninguna saga";
 
   document.getElementById("notas").textContent = pelicula.notas;
 
-  // ============================================================
-// BOTÓN "VER SAGA"
-// ============================================================
-const btnSaga = document.getElementById("btn-ver-saga");
+  // BOTÓN VER SAGA
+  const btnSaga = document.getElementById("btn-ver-saga");
+  if (saga?.esParte && saga?.nombre?.trim()) {
+    btnSaga.classList.remove("oculto");
+    btnSaga.addEventListener("click", () => {
+      sessionStorage.setItem("catalogo_saga", saga.nombre);
+      window.location.href = `catalog.html?saga=${encodeURIComponent(saga.nombre)}`;
+    });
+  } else {
+    btnSaga.classList.add("oculto");
+  }
 
-if (
-  pelicula.saga?.esParte &&
-  pelicula.saga.nombre &&
-  pelicula.saga.nombre.trim() !== ""
-) {
-  btnSaga.classList.remove("oculto"); // mostrar
-  btnSaga.addEventListener("click", () => {
-    // Guardar saga temporalmente mientras navegas
-    sessionStorage.setItem("catalogo_saga", pelicula.saga.nombre);
-    window.location.href =
-      `catalog.html?saga=${encodeURIComponent(pelicula.saga.nombre)}`;
-  });
-} else {
-  btnSaga.classList.add("oculto"); // ocultar
-}
-
-
-  // ============================================================
-  // BOTÓN "VER OTRAS EDICIONES"
-  // ============================================================
+  // OTRAS EDICIONES
   document.getElementById("btn-otras-ediciones").addEventListener("click", () => {
     window.location.href = `catalog.html?edicionExacta=${encodeURIComponent(pelicula.titulo)}`;
   });
 
-  // ============================================================
-  // BOTÓN ATRÁS
-  // ============================================================
+  // ATRÁS
   document.getElementById("btn-atras").addEventListener("click", () => {
     window.location.href = "catalog.html";
   });
 
-  // ============================================================
-  // BOTÓN EDITAR
-  // ============================================================
+  // EDITAR
   document.getElementById("btn-editar").addEventListener("click", () => {
     window.location.href = `edit.html?id=${idPelicula}`;
   });
 
-  // ============================================================
-  // BOTÓN ELIMINAR (REAL)
-  // ============================================================
+  // ELIMINAR
   document.getElementById("btn-eliminar").addEventListener("click", async () => {
-    const confirmar = confirm("¿Seguro que quieres eliminar esta película?");
-
-    if (!confirmar) return;
+    if (!confirm("¿Seguro que quieres eliminar esta película?")) return;
 
     try {
-      await deleteDoc(ref);
+      await deleteMovie(idPelicula);
       alert("Película eliminada correctamente.");
       window.location.href = "catalog.html";
     } catch (error) {
@@ -137,16 +98,16 @@ if (
       alert("Error al eliminar la película.");
     }
   });
-document.getElementById("btn-volver-top").addEventListener("click", () => {
-  window.location.href = "catalog.html";
+
+  // VOLVER TOP
+  document.getElementById("btn-volver-top").addEventListener("click", () => {
+    window.location.href = "catalog.html";
+  });
+
+  // Limpieza de objectURL (evita fugas)
+  window.addEventListener("beforeunload", () => {
+    if (pelicula.portadaBlob && portadaUrl && portadaUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(portadaUrl);
+    }
+  });
 });
-
-});
-
-
-
-
-
-
-
-

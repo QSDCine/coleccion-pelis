@@ -1,19 +1,11 @@
-import { db } from "./firebase.js";
-import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { addMovie, buildCoverBlobs } from "./db.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-
-  // ============================
   // MODO OSCURO
-  // ============================
   const temaGuardado = localStorage.getItem("tema");
-  if (temaGuardado === "oscuro") {
-    document.body.classList.add("oscuro");
-  }
+  if (temaGuardado === "oscuro") document.body.classList.add("oscuro");
 
-  // ============================
   // REFERENCIAS
-  // ============================
   const form = document.getElementById("form-add");
 
   const inputTitulo = document.getElementById("titulo");
@@ -32,29 +24,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputNotas = document.getElementById("notas");
   const inputPortada = document.getElementById("portada");
 
-  // ============================
   // MOSTRAR/OCULTAR SAGA
-  // ============================
-selectEsParteSaga.addEventListener("change", () => {
-  if (selectEsParteSaga.value === "true") {
-    camposSaga.style.display = "block";
-    inputNombreSaga.required = true;
-    inputNumeroSaga.required = true;
-    inputTotalSaga.required = true;
-  } else {
-    camposSaga.style.display = "none";
-    inputNombreSaga.required = false;
-    inputNumeroSaga.required = false;
-    inputTotalSaga.required = false;
-    inputNombreSaga.value = "";
-    inputNumeroSaga.value = "";
-    inputTotalSaga.value = "";
-  }
-});
+  selectEsParteSaga.addEventListener("change", () => {
+    const on = selectEsParteSaga.value === "true";
+    camposSaga.style.display = on ? "block" : "none";
+    inputNombreSaga.required = on;
+    inputNumeroSaga.required = on;
+    inputTotalSaga.required = on;
 
-  // ============================
-  // GUARDAR PELÍCULA
-  // ============================
+    if (!on) {
+      inputNombreSaga.value = "";
+      inputNumeroSaga.value = "";
+      inputTotalSaga.value = "";
+    }
+  });
+
+  // GUARDAR
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -66,56 +51,51 @@ selectEsParteSaga.addEventListener("change", () => {
     const directores = inputDirector.value
       .split(",")
       .map(d => d.trim())
-      .filter(d => d !== "");
+      .filter(Boolean);
 
     const generos = inputGeneros.value
       .split(",")
       .map(g => g.trim())
-      .filter(g => g !== "");
+      .filter(Boolean);
 
-    const edicionEspecial = selectEdicionEspecial.value === "true";
+    const saga = {
+      esParte: selectEsParteSaga.value === "true",
+      nombre: selectEsParteSaga.value === "true" ? inputNombreSaga.value.trim() : "",
+      numero: selectEsParteSaga.value === "true" ? Number(inputNumeroSaga.value) : null,
+      totalsaga: selectEsParteSaga.value === "true" ? Number(inputTotalSaga.value) : null
+    };
 
-const saga = {
-  esParte: selectEsParteSaga.value === "true",
-  nombre: selectEsParteSaga.value === "true" ? inputNombreSaga.value.trim() : "",
-  numero: selectEsParteSaga.value === "true" ? Number(inputNumeroSaga.value) : null,
-  totalsaga: selectEsParteSaga.value === "true" ? Number(inputTotalSaga.value) : null
-};
-
-    const portadaFinal = inputPortada.value.trim() || "https://qsdcine.github.io/coleccion-pelis-dan/img/default.jpg";
+    const file = inputPortada.files?.[0] || null;
+    const { coverBlob, thumbBlob } = await buildCoverBlobs(file);
 
     const nuevaPelicula = {
       titulo: inputTitulo.value.trim(),
       año: Number(inputAño.value),
-      director: directores,
-      generos: generos,
+      director: directores,   // ✅ ARRAY
+      generos: generos,       // ✅ ARRAY
       formato: selectFormato.value,
-      edicionEspecial: edicionEspecial,
-      saga: saga,
+      edicionEspecial: selectEdicionEspecial.value === "true",
+      saga,
       notas: inputNotas.value.trim(),
-      portada: portadaFinal
+      portadaBlob: coverBlob,
+      portadaThumbBlob: thumbBlob,
+      createdAt: Date.now()
     };
 
     try {
-      const ref = await addDoc(collection(db, "peliculas"), nuevaPelicula);
+      const newId = await addMovie(nuevaPelicula);
       mostrarToast("Película añadida correctamente.");
-      window.location.href = `movie.html?id=${ref.id}`;
+      window.location.href = `movie.html?id=${newId}`;
     } catch (error) {
       console.error("Error al guardar:", error);
       mostrarToast("Error al guardar la película.");
     }
   });
-function mostrarToast(mensaje) {
-  const toast = document.getElementById("toast");
-  toast.textContent = mensaje;
-  toast.classList.add("mostrar");
 
-  setTimeout(() => {
-    toast.classList.remove("mostrar");
-  }, 2500);
-}
-
+  function mostrarToast(mensaje) {
+    const toast = document.getElementById("toast");
+    toast.textContent = mensaje;
+    toast.classList.add("mostrar");
+    setTimeout(() => toast.classList.remove("mostrar"), 2500);
+  }
 });
-
-
-
