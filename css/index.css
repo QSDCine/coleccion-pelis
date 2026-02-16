@@ -1,0 +1,223 @@
+/* ===========================
+   ESTILOS GENERALES
+=========================== */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  color: #222;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ===========================
+   HEADER
+=========================== */
+
+.header {
+  background: #222;
+  color: #fff;
+  padding: 25px 15px;
+  text-align: center;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.btn-theme {
+  display: flex;               /* convierte el botón en contenedor flex */
+  justify-content: center;     /* centra horizontalmente */
+  align-items: center;         /* centra verticalmente */
+  margin: 30px auto 20px auto;
+  width: 42px;
+  height: 42px;
+  background: #444;
+  color: #fff;
+  border: none;
+  border-radius: 50%;          /* círculo perfecto */
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+  padding: 0;                  /* importante: elimina padding */
+}
+
+.btn-theme:hover {
+  background: #555;
+}
+
+/* ===========================
+   MAIN
+=========================== */
+
+.main {
+  flex: 1;
+  padding: 20px;
+  text-align: center;
+}
+
+.intro p {
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+}
+
+/* ===========================
+   BOTONES DE ACCIÓN
+=========================== */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.actions button {
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+/* Botón principal */
+.btn-primary {
+  background: #0077ff;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #005fcc;
+}
+
+/* Botón secundario */
+.btn-secondary {
+  background: #00b894;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: #009f7e;
+}
+
+
+
+body.oscuro {
+  background: #111;
+  color: #eee;
+}
+
+body.oscuro .header {
+  background: #000;
+}
+
+body.oscuro .btn-theme {
+  background: #333;
+}
+
+/* ===========================
+   BOTÓN DE TEMA (ABAJO)
+=========================== */
+
+.btn-theme {
+  position: fixed;
+  bottom: 20px;          /* siempre visible */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 42px;
+  height: 42px;
+  background: #444;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;          /* por si acaso */
+}
+.btn-theme:hover {
+  background: #555;
+}
+
+body.oscuro .btn-theme {
+  background: #222;
+}
+
+.btn-mini {
+  padding: 12px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  background: #9b5de5;   /* morado elegante */
+  color: #fff;
+  margin: 20px auto;     /* centrado y con aire */
+  display: block;        /* para que respete el centrado */
+  max-width: 300px;      /* igual que los otros botones */
+}
+.btn-mini:hover {
+  background: #7a3fcf;   /* morado más oscuro al pasar el ratón */
+}
+
+
+.solo-admin {
+  display: none;
+}
+
+.admin .solo-admin {
+  display: block;
+}
+
+.admin #btn-login-index {
+  display: none;
+}
+
+/* ===========================
+   BOTÓN LOGIN / LOGOUT (DEBAJO DEL BOTÓN DE TEMA)
+=========================== */
+
+.btn-loginout {
+  position: fixed;
+  bottom: 1px;              /* debajo del botón de tema */
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  background: #6e6e6e;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease, opacity 0.2s ease;
+  opacity: 0.85;
+  z-index: 998;
+}
+
+.btn-loginout:hover {
+  background: #005fcc;
+  opacity: 1;
+}
+
+.btn-loginout:active {
+  transform: translateX(-50%) scale(0.97);
+}
+
+/* Modo oscuro */
+body.oscuro .btn-loginout {
+  background: #333;
+  color: #eee;
+}
+
+body.oscuro .btn-loginout:hover {
+  background: #444;
+}
